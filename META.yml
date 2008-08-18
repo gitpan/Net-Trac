@@ -1,0 +1,26 @@
+---
+abstract: ~
+author:
+  - 'Jesse Vincent <jesse@bestpractical.com>'
+distribution_type: module
+generated_by: 'Module::Install version 0.77'
+license: perl
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: Net-Trac
+no_index:
+  directory:
+    - inc
+    - t
+requires:
+  IO::Scalar: 0
+  LWP::Simple: 0
+  Moose: 0
+  Params::Validate: 0
+  Text::CSV_XS: 0
+  URI: 0
+  XML::Feed: 0
+resources:
+  license: http://dev.perl.org/licenses/
+version: 0.01_01
