@@ -1,7 +1,7 @@
 ---
-abstract: ~
+abstract: 'Interact with a remote Trac instance'
 author:
-  - 'Jesse Vincent <jesse@bestpractical.com>'
+  - 'Jesse Vincent <jesse@bestpractical.com>, Thomas Sibley <trs@bestpractical.com>'
 distribution_type: module
 generated_by: 'Module::Install version 0.77'
 license: perl
@@ -14,13 +14,18 @@ no_index:
     - inc
     - t
 requires:
+  DateTime::Format::ISO8601: 0
   IO::Scalar: 0
   LWP::Simple: 0
+  Lingua::EN::Inflect: 0
   Moose: 0
+  Moose::Util::TypeConstraints: 0
   Params::Validate: 0
   Text::CSV_XS: 0
   URI: 0
+  URI::Escape: 0
+  WWW::Mechanize: 1.52
   XML::Feed: 0
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.01_01
+version: 0.03

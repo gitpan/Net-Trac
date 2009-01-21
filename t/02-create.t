@@ -1,7 +1,7 @@
 use warnings; 
 use strict;
 
-use Test::More qw/no_plan/;
+use Test::More tests => 16;
 use_ok('Net::Trac::Connection');
 use_ok('Net::Trac::Ticket');
 require 't/setup_trac.pl';
@@ -31,3 +31,5 @@ ok($ticket->load(1));
 like($ticket->state->{'summary'}, qr/pony/);
 like($ticket->summary, qr/pony/, "The summary looks like a pony");
 ok($ticket->history, "The ticket has some history");
+ok($ticket->time, "The ticket has a created time: ".$ticket->time);
+
