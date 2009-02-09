@@ -2,7 +2,7 @@ use strict;
 use warnings;
 
 package Net::Trac::TicketSearch;
-use Moose;
+use Any::Moose;
 use Params::Validate qw(:all);
 use URI::Escape qw(uri_escape);
 
@@ -97,9 +97,10 @@ sub query {
 
     unless ( $no_objects ) {
         my @tickets = ();
-        for ( @{$data || []} ) {
+        for my $ticket_data ( @{$data || []} ) {
             my $ticket = Net::Trac::Ticket->new( connection => $self->connection );
-            my $id = $ticket->load_from_hashref( $_ );
+            $ticket->_tweak_ticket_data_for_load($ticket_data);
+            my $id = $ticket->load_from_hashref( $ticket_data );
             push @tickets, $ticket if $id;
         }
         return $self->results( \@tickets );
@@ -156,7 +157,7 @@ This package is licensed under the same terms as Perl 5.8.8.
 =cut
 
 __PACKAGE__->meta->make_immutable;
-no Moose;
+no Any::Moose;
 
 1;
 

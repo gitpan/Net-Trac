@@ -17,10 +17,10 @@
 #     NAME => q[Net::Trac]
 #     NO_META => q[1]
 #     PL_FILES => {  }
-#     PREREQ_PM => { DateTime::Format::ISO8601=>q[0], IO::Scalar=>q[0], URI=>q[0], URI::Escape=>q[0], XML::Feed=>q[0], WWW::Mechanize=>q[1.52], ExtUtils::MakeMaker=>q[6.48], Moose::Util::TypeConstraints=>q[0], Params::Validate=>q[0], Lingua::EN::Inflect=>q[0], Text::CSV_XS=>q[0], MooseX::ClassAttribute=>q[0], LWP::Simple=>q[0], Moose=>q[0] }
-#     VERSION => q[0.05]
+#     PREREQ_PM => { DateTime::Format::ISO8601=>q[0], IO::Scalar=>q[0], URI=>q[0], URI::Escape=>q[0], XML::Feed=>q[0], WWW::Mechanize=>q[1.52], ExtUtils::MakeMaker=>q[6.48], Params::Validate=>q[0], Any::Moose=>q[0], Lingua::EN::Inflect=>q[0], Text::CSV_XS=>q[0], LWP::Simple=>q[0] }
+#     VERSION => q[0.06]
 #     dist => { PREOP=>q[$(PERL) -I. "-MModule::Install::Admin" -e "dist_preop(q($(DISTVNAME)))"] }
-#     test => { TESTS=>q[t/01-dependencies.t t/02-create.t t/50-full-api.t t/99-pod-coverage.t t/99-pod.t t/attachments.t t/comments.t t/parse_props.t t/search.t t/update.t] }
+#     test => { TESTS=>q[t/01-dependencies.t t/02-create.t t/50-full-api.t t/99-pod-coverage.t t/99-pod.t t/attachments.t t/comments.t t/keywords.t t/parse_props.t t/search.t t/update.t] }
 
 # --- MakeMaker post_initialize section:
 
@@ -59,11 +59,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = Net::Trac
 NAME_SYM = Net_Trac
-VERSION = 0.05
+VERSION = 0.06
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_05
+VERSION_SYM = 0_06
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.05
+XS_VERSION = 0.06
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -286,7 +286,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = Net-Trac
-DISTVNAME = Net-Trac-0.05
+DISTVNAME = Net-Trac-0.06
 
 
 # --- MakeMaker macro section:
@@ -784,7 +784,7 @@ $(MAKE_APERL_FILE) : $(FIRST_MAKEFILE) pm_to_blib
 TEST_VERBOSE=0
 TEST_TYPE=test_$(LINKTYPE)
 TEST_FILE = test.pl
-TEST_FILES = t/01-dependencies.t t/02-create.t t/50-full-api.t t/99-pod-coverage.t t/99-pod.t t/attachments.t t/comments.t t/parse_props.t t/search.t t/update.t
+TEST_FILES = t/01-dependencies.t t/02-create.t t/50-full-api.t t/99-pod-coverage.t t/99-pod.t t/attachments.t t/comments.t t/keywords.t t/parse_props.t t/search.t t/update.t
 TESTDB_SW = -d
 
 testdb :: testdb_$(LINKTYPE)
@@ -810,19 +810,17 @@ testdb_static :: testdb_dynamic
 # --- MakeMaker ppd section:
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd :
-	$(NOECHO) $(ECHO) '<SOFTPKG NAME="$(DISTNAME)" VERSION="0,05,0,0">' > $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '<SOFTPKG NAME="$(DISTNAME)" VERSION="0,06,0,0">' > $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <TITLE>$(DISTNAME)</TITLE>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <ABSTRACT>Interact with a remote Trac instance</ABSTRACT>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <AUTHOR>Jesse Vincent &lt;jesse@bestpractical.com&gt;, Thomas Sibley &lt;trs@bestpractical.com&gt;</AUTHOR>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="Any-Moose" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="DateTime-Format-ISO8601" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="ExtUtils-MakeMaker" VERSION="6,48,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="IO-Scalar" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="LWP-Simple" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="Lingua-EN-Inflect" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="Moose" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="Moose-Util-TypeConstraints" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="MooseX-ClassAttribute" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="Params-Validate" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="Text-CSV_XS" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="URI" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd

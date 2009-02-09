@@ -22,8 +22,7 @@ comments and getting attachments.
 
 =cut
 
-use Moose;
-use MooseX::ClassAttribute;
+use Any::Moose;
 use Params::Validate qw(:all);
 use Lingua::EN::Inflect qw();
 use DateTime::Format::ISO8601;
@@ -42,17 +41,37 @@ has state => (
     is  => 'rw'
 );
 
+
+has history => (
+    isa     => 'Net::Trac::TicketHistory',
+    is => 'rw',
+    default => sub {
+        my $self = shift;
+        my $hist = Net::Trac::TicketHistory->new( { connection => $self->connection } );
+        $hist->load($self);
+        return $hist;
+    },
+    lazy => 1
+);
+
+
+
 has _attachments            => ( isa => 'ArrayRef', is => 'rw' );
 
-class_has _loaded_new_metadata    => ( isa => 'Bool',     is => 'rw' );
-class_has _loaded_update_metadata => ( isa => 'Bool',     is => 'rw' );
+our $LOADED_NEW_METADATA =0;
+our $LOADED_UPDATE_METADATA =0;
 
-class_has valid_milestones  => ( isa => 'ArrayRef', is => 'rw', default => sub {[]} );
-class_has valid_types       => ( isa => 'ArrayRef', is => 'rw', default => sub {[]} );
-class_has valid_components  => ( isa => 'ArrayRef', is => 'rw', default => sub {[]} );
-class_has valid_priorities  => ( isa => 'ArrayRef', is => 'rw', default => sub {[]} );
-class_has valid_resolutions => ( isa => 'ArrayRef', is => 'rw', default => sub {[]} );
-class_has valid_severities  => ( isa => 'ArrayRef', is => 'rw', default => sub {[]} );
+
+our (
+    $_VALID_MILESTONES, $_VALID_TYPES,       $_VALID_COMPONENTS,
+    $_VALID_PRIORITIES, $_VALID_RESOLUTIONS, $_VALID_SEVERITIES
+);
+sub valid_milestones { shift; $_VALID_MILESTONES = shift if (@_); return $_VALID_MILESTONES || [] }
+sub valid_types      { shift; $_VALID_TYPES      = shift if (@_); return $_VALID_TYPES ||[]}
+sub valid_components { shift; $_VALID_COMPONENTS = shift if (@_); return $_VALID_COMPONENTS || [] }
+sub valid_priorities { shift; $_VALID_PRIORITIES = shift if (@_); return $_VALID_PRIORITIES || [] }
+sub valid_resolutions { shift; $_VALID_RESOLUTIONS = shift if (@_); return $_VALID_RESOLUTIONS || []; }
+sub valid_severities { shift; $_VALID_SEVERITIES = shift if (@_); return $_VALID_SEVERITIES || [] }
 
 sub basic_statuses { qw( new accepted assigned reopened closed ) }
 
@@ -79,7 +98,7 @@ sub _time_to_datetime {
 
 sub BUILD {
     my $self = shift;
-    $self->_fetch_new_ticket_metadata unless ($self->_loaded_new_metadata);
+    $self->_fetch_new_ticket_metadata unless ($LOADED_NEW_METADATA);
 }
 
 =head1 METHODS
@@ -106,9 +125,22 @@ sub load {
 
     return unless @{ $search->results };
 
-    my $tid = $self->load_from_hashref( $search->results->[0] );
+    my $ticket_data = $search->results->[0];
+    $self->_tweak_ticket_data_for_load($ticket_data);
+
+    my $tid = $self->load_from_hashref( $ticket_data);
     return $tid;
 }
+
+# We force an order on the keywords prop since trac doesn't let us
+# really know what the order used to be
+sub _tweak_ticket_data_for_load {
+    my $self = shift;
+    my $ticket = shift;
+    $ticket->{keywords} = join(' ', sort ( split ( /\s+/,$ticket->{keywords})));
+
+}
+
 
 =head2 load_from_hashref HASHREF [SKIP]
 
@@ -159,7 +191,7 @@ sub _get_update_ticket_form {
 sub _fetch_new_ticket_metadata {
     my $self = shift;
 
-    return 1 if $self->_loaded_new_metadata;
+    return 1 if $LOADED_NEW_METADATA;
 
     my ($form, $form_num) = $self->_get_new_ticket_form;
     return undef unless $form;
@@ -171,14 +203,14 @@ sub _fetch_new_ticket_metadata {
 
     my $severity = $form->find_input("field_severity");
     $self->valid_severities([ $severity->possible_values ]) if $severity;
-    $self->_loaded_new_metadata( 1 );
+    $LOADED_NEW_METADATA++;
     return 1;
 }
 
 sub _fetch_update_ticket_metadata {
     my $self = shift;
 
-    return 1 if $self->_loaded_update_metadata;
+    return 1 if $LOADED_UPDATE_METADATA;
 
     my ($form, $form_num) = $self->_get_update_ticket_form;
     return undef unless $form;
@@ -186,7 +218,7 @@ sub _fetch_update_ticket_metadata {
     my $resolutions = $form->find_input("action_resolve_resolve_resolution");
     $self->valid_resolutions( [$resolutions->possible_values] ) if $resolutions;
     
-    $self->_loaded_update_metadata( 1 );
+    $LOADED_UPDATE_METADATA++;
     return 1;
 }
 
@@ -195,8 +227,8 @@ sub _metadata_validation_rules {
     my $type = lc shift;
 
     # Ensure that we've loaded up metadata
-    $self->_fetch_new_ticket_metadata unless ($self->_loaded_new_metadata);
-    $self->_fetch_update_ticket_metadata if ( ( $type eq 'update' ) && ! $self->_loaded_update_metadata);
+    $self->_fetch_new_ticket_metadata unless $LOADED_NEW_METADATA;
+    $self->_fetch_update_ticket_metadata if ( ( $type eq 'update' ) && ! $LOADED_UPDATE_METADATA);
 
     my %rules;
     for my $prop ( @_ ) {
@@ -302,9 +334,9 @@ sub update {
         form_number => $form_num,
         fields => { %form, submit => 1 }
     );
-
     my $reply = $self->connection->mech->response;
     if ( $reply->is_success ) {
+        delete $self->{history}; # ICK. I really want a Any::Moose "reset to default"
         return $self->load($self->id);
     }
     else {
@@ -330,12 +362,6 @@ Returns a L<Net::Trac::TicketHistory> object for this ticket.
 
 =cut
 
-sub history {
-    my $self = shift;
-    my $hist = Net::Trac::TicketHistory->new({ connection => $self->connection });
-    $hist->load( $self->id );
-    return $hist;
-}
 
 =head2 comments
 
@@ -393,6 +419,7 @@ sub attach {
 
     my $reply = $self->connection->mech->response;
     $self->connection->_warn_on_error( $reply->base->as_string ) and return;
+    delete $self->{history}; # ICK. I really want a Any::Moose "reset to default"
 
     return $self->attachments->[-1];
 }
@@ -524,7 +551,7 @@ This package is licensed under the same terms as Perl 5.8.8.
 =cut
 
 __PACKAGE__->meta->make_immutable;
-no Moose;
+no Any::Moose;
 
 1;
 
