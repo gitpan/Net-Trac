@@ -26,10 +26,7 @@ required by all other classes which need to talk to Trac.
 
 use Any::Moose;
 
-use XML::Feed;
 use URI;
-use Text::CSV_XS;
-use IO::Scalar;
 use Params::Validate;
 use Net::Trac::Mechanize;
 
@@ -196,27 +193,7 @@ sub _warn_on_error {
     else        { return }
 }
 
-=head2 _fetch_feed URL
-
-Fetches and parses a relative feed URL from the Trac server.  Warns if an error
-occurs and returns undef.  Otherwise returns an L<XML::Feed> object.
-
-=cut
-
-sub _fetch_feed {
-    my $self  = shift;
-    my $query = shift;
-    my $feed  = XML::Feed->parse( URI->new( $self->url . $query ) );
-
-    if ( not $feed ) {
-        warn XML::Feed->errstr;
-        return;
-    }
-
-    return $feed;
-}
-
-=head2 _csv_to_struct PARAMHASH
+=head2 _tsv_to_struct PARAMHASH
 
 Takes a paramhash of the keys C<data> and C<key> and optionally C<type>.
 Given CSV data this method will return a reference to a hash (by default)
@@ -225,28 +202,27 @@ what field should be used as the key field when creating a hashref.
 
 =cut
 
-sub _csv_to_struct {
+sub _tsv_to_struct {
     my $self = shift;
-    my %args = validate( @_, { data => 1, key => 1, type => { default => 'hash' } } );
-    my $csv  = Text::CSV_XS->new( { binary => 1 } );
-    my $x    = $args{'data'};
-    my $io   = IO::Scalar->new($x);
-    my @cols = @{ $csv->getline($io) || [] };
-    return unless defined $cols[0];
-    $csv->column_names(@cols);
-    my $data;
+    my %args = validate( @_, { data => 1, key => 1, type => 1 } );
+    my $x    = ${$args{'data'}};
 
-    if ( lc $args{'type'} eq 'hash' ) {
-        while ( my $row = $csv->getline_hr($io) ) {
-            $data->{ $row->{ $args{'key'} } } = $row;
-        }
+    my $data = [];
+    my @lines = split(/\r\n/,$x);
+    
+
+    my @keys = split(/\t/, shift @lines);
+
+    for my $line (@lines) {
+        my %hash;
+        my @values = split(/\t/,$line);
+        
+       $hash{$_} = shift @values for (@keys); 
+       push @$data, \%hash;
     }
-    elsif ( lc $args{'type'} eq 'array' ) {
-        while ( my $row = $csv->getline_hr($io) ) {
-            push @$data, $row;
-        }
-    }
+
     return $data;
+
 }
 
 =head1 LICENSE
