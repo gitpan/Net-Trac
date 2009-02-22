@@ -12,10 +12,10 @@ requires 'LWP::Simple';
 requires 'Params::Validate';
 requires 'WWW::Mechanize' => '1.52';
 requires 'DateTime';
-requires 'DateTime::Format::ISO8601';
 requires 'HTTP::Date';
 requires 'Lingua::EN::Inflect';
 requires 'URI::Escape';
+requires 'Text::CSV';
 
 auto_install;
 sign; 
