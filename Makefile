@@ -1,12 +1,12 @@
 # This Makefile is for the Net::Trac extension to perl.
 #
 # It was generated automatically by MakeMaker version
-# 6.48 (Revision: 64800) from the contents of
+# 6.49_01 (Revision: 64901) from the contents of
 # Makefile.PL. Don't edit this file, edit Makefile.PL instead.
 #
 #       ANY CHANGES MADE HERE WILL BE LOST!
 #
-#   MakeMaker ARGV: (q[-])
+#   MakeMaker ARGV: ()
 #
 #   MakeMaker Parameters:
 
@@ -17,8 +17,8 @@
 #     NAME => q[Net::Trac]
 #     NO_META => q[1]
 #     PL_FILES => {  }
-#     PREREQ_PM => { DateTime=>q[0], URI=>q[0], URI::Escape=>q[0], WWW::Mechanize=>q[1.52], ExtUtils::MakeMaker=>q[6.48], Text::CSV=>q[0], HTTP::Date=>q[0], Params::Validate=>q[0], Any::Moose=>q[0], Lingua::EN::Inflect=>q[0], LWP::Simple=>q[0] }
-#     VERSION => q[0.09]
+#     PREREQ_PM => { DateTime=>q[0], URI=>q[0], URI::Escape=>q[0], WWW::Mechanize=>q[1.52], ExtUtils::MakeMaker=>q[6.49], Text::CSV=>q[0], HTTP::Date=>q[0], Params::Validate=>q[0], Any::Moose=>q[0], Lingua::EN::Inflect=>q[0], LWP::Simple=>q[0] }
+#     VERSION => q[0.10]
 #     dist => { PREOP=>q[$(PERL) -I. "-MModule::Install::Admin" -e "dist_preop(q($(DISTVNAME)))"] }
 #     test => { TESTS=>q[t/01-dependencies.t t/02-create.t t/50-full-api.t t/99-pod-coverage.t t/99-pod.t t/attachments.t t/comments.t t/keywords.t t/parse_props.t t/search.t t/update.t] }
 
@@ -59,11 +59,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = Net::Trac
 NAME_SYM = Net_Trac
-VERSION = 0.09
+VERSION = 0.10
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_09
+VERSION_SYM = 0_10
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.09
+XS_VERSION = 0.10
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -138,8 +138,8 @@ PERM_RW = 644
 PERM_RWX = 755
 
 MAKEMAKER   = /opt/perl-5.8.9/lib/5.8.9/ExtUtils/MakeMaker.pm
-MM_VERSION  = 6.48
-MM_REVISION = 64800
+MM_VERSION  = 6.49_01
+MM_REVISION = 64901
 
 # FULLEXT = Pathname for extension directory (eg Foo/Bar/Oracle).
 # BASEEXT = Basename part of FULLEXT. May be just equal FULLEXT. (eg Oracle)
@@ -223,7 +223,7 @@ PM_TO_BLIB = lib/Net/Trac.pm \
 
 
 # --- MakeMaker platform_constants section:
-MM_Unix_VERSION = 6.48
+MM_Unix_VERSION = 6.49_01
 PERL_MALLOC_DEF = -DPERL_EXTMALLOC_DEF -Dmalloc=Perl_malloc -Dfree=Perl_mfree -Drealloc=Perl_realloc -Dcalloc=Perl_calloc
 
 
@@ -286,7 +286,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = Net-Trac
-DISTVNAME = Net-Trac-0.09
+DISTVNAME = Net-Trac-0.10
 
 
 # --- MakeMaker macro section:
@@ -595,7 +595,7 @@ distdir : create_distdir
 
 # --- MakeMaker dist_test section:
 disttest : distdir
-	cd $(DISTVNAME) && $(ABSPERLRUN) Makefile.PL "-"
+	cd $(DISTVNAME) && $(ABSPERLRUN) Makefile.PL 
 	cd $(DISTVNAME) && $(MAKE) $(PASTHRU)
 	cd $(DISTVNAME) && $(MAKE) test $(PASTHRU)
 
@@ -755,7 +755,7 @@ $(FIRST_MAKEFILE) : Makefile.PL $(CONFIGDEP)
 	-$(NOECHO) $(RM_F) $(MAKEFILE_OLD)
 	-$(NOECHO) $(MV)   $(FIRST_MAKEFILE) $(MAKEFILE_OLD)
 	- $(MAKE) $(USEMAKEFILE) $(MAKEFILE_OLD) clean $(DEV_NULL)
-	$(PERLRUN) Makefile.PL "-"
+	$(PERLRUN) Makefile.PL 
 	$(NOECHO) $(ECHO) "==> Your Makefile has been rebuilt. <=="
 	$(NOECHO) $(ECHO) "==> Please rerun the $(MAKE) command.  <=="
 	false
@@ -776,8 +776,7 @@ $(MAKE_APERL_FILE) : $(FIRST_MAKEFILE) pm_to_blib
 	$(NOECHO) $(PERLRUNINST) \
 		Makefile.PL DIR= \
 		MAKEFILE=$(MAKE_APERL_FILE) LINKTYPE=static \
-		MAKEAPERL=1 NORECURS=1 CCCDLFLAGS= \
-		-
+		MAKEAPERL=1 NORECURS=1 CCCDLFLAGS=
 
 
 # --- MakeMaker test section:
@@ -811,14 +810,14 @@ testdb_static :: testdb_dynamic
 # --- MakeMaker ppd section:
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd :
-	$(NOECHO) $(ECHO) '<SOFTPKG NAME="$(DISTNAME)" VERSION="0,09,0,0">' > $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '<SOFTPKG NAME="$(DISTNAME)" VERSION="0,10,0,0">' > $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <TITLE>$(DISTNAME)</TITLE>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <ABSTRACT>Interact with a remote Trac instance</ABSTRACT>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <AUTHOR>Jesse Vincent &lt;jesse@bestpractical.com&gt;, Thomas Sibley &lt;trs@bestpractical.com&gt;</AUTHOR>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="Any-Moose" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="DateTime" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
-	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="ExtUtils-MakeMaker" VERSION="6,48,0,0" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="ExtUtils-MakeMaker" VERSION="6,49,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="HTTP-Date" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="LWP-Simple" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <DEPENDENCY NAME="Lingua-EN-Inflect" VERSION="0,0,0,0" />' >> $(DISTNAME).ppd
