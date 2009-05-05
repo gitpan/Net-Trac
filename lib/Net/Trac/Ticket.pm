@@ -101,6 +101,7 @@ sub timestamp_to_datetime {
         my ( $year, $month, $day, $hour, $min, $sec, $offset) = 
                 ( $1, $2, $3, $4, $5, $6, $7 );
 
+        $offset ||= '00:00';
         $offset =~ s/://;
         return DateTime->new(
             year   => $year,
@@ -390,7 +391,7 @@ sub comments {
 
     my @comments;
     for ( @{$hist->entries} ) {
-        push @comments, $_ if $_->content =~ /\S/;
+        push @comments, $_ if ($_->content =~ /\S/ && ! $_->is_create);
     }
     return wantarray ? @comments : \@comments;
 }
