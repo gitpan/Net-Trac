@@ -56,7 +56,11 @@ has history => (
 
 
 
-has _attachments            => ( isa => 'ArrayRef', is => 'rw' );
+has _attachments => (
+    isa => 'ArrayRef',
+    is => 'rw',
+    default => sub {[]}
+);
 
 our $LOADED_NEW_METADATA =0;
 our $LOADED_UPDATE_METADATA =0;
@@ -75,16 +79,25 @@ sub valid_severities { shift; $_VALID_SEVERITIES = shift if (@_); return $_VALID
 
 sub basic_statuses { qw( new accepted assigned reopened closed ) }
 
-sub valid_props { qw( id summary type status priority severity resolution owner reporter cc
-        description keywords component milestone version time changetime ) }
+my @valid_props_arr = ();
+
+sub valid_props { return @valid_props_arr }
+
+sub add_custom_props {
+    my ($self, @props) = @_;
+    for my $prop (@props) {
+        next if grep { $_ eq $prop } @valid_props_arr;
+        push @valid_props_arr, $prop;
+        no strict 'refs';
+        *{ "Net::Trac::Ticket::" . $prop } = sub { shift->state->{$prop} };
+    }
+}
+
+Net::Trac::Ticket->add_custom_props(qw( id summary type status priority severity resolution owner reporter cc
+        description keywords component milestone version time changetime ));
 
 sub valid_create_props { grep { !/^(?:resolution|time|changetime)$/i } $_[0]->valid_props }
 sub valid_update_props { grep { !/^(?:time|changetime)$/i } $_[0]->valid_props }
-
-for my $prop ( __PACKAGE__->valid_props ) {
-    no strict 'refs';
-    *{ "Net::Trac::Ticket::" . $prop } = sub { shift->state->{$prop} };
-}
 
 sub created       { my $self= shift; $self->timestamp_to_datetime($self->time) }
 sub last_modified { my $self= shift; $self->timestamp_to_datetime($self->changetime) }
@@ -200,6 +213,14 @@ sub _get_update_ticket_form {
     return undef;
 }
 
+sub _get_possible_values {
+    my $self = shift;
+    my ($form, $field) = @_;
+    my $res = $form->find_input($field);
+    return [] unless defined $res; 
+    return [ $res->possible_values ];
+}
+
 sub _fetch_new_ticket_metadata {
     my $self = shift;
 
@@ -210,10 +231,13 @@ sub _fetch_new_ticket_metadata {
         return undef;
     }
 
-    $self->valid_milestones([ $form->find_input("field_milestone")->possible_values ]);
-    $self->valid_types     ([ $form->find_input("field_type")->possible_values ]);
-    $self->valid_components([ $form->find_input("field_component")->possible_values ]);
-    $self->valid_priorities([ $form->find_input("field_priority")->possible_values ]);
+    $self->valid_milestones(
+        $self->_get_possible_values( $form, 'field_milestone' ) );
+    $self->valid_types( $self->_get_possible_values( $form, 'field_type' ) );
+    $self->valid_components(
+        $self->_get_possible_values( $form, 'field_component' ) );
+    $self->valid_priorities(
+        $self->_get_possible_values( $form, 'field_priority' ) );
 
     my $severity = $form->find_input("field_severity");
     $self->valid_severities([ $severity->possible_values ]) if $severity;
@@ -301,10 +325,7 @@ sub create {
 
 =head2 update HASH
 
-Updates the current ticket with the specified values.  This method will
-attempt to emulate Trac's default workflow by auto-updating the status
-based on changes to other fields.  To avoid this auto-updating, specify
-a true value as the value for the key C<no_auto_status>.
+Updates the current ticket with the specified values.
 
 Returns undef on failure, and the ID of the current ticket on success.
 
@@ -316,33 +337,33 @@ sub update {
         @_,
         {
             comment         => 0,
-            no_auto_status  => { default => 0 },
             %{$self->_metadata_validation_rules( 'update' => $self->valid_update_props )}
         }
     );
-
-    # Automatically set the status for default trac workflows unless
-    # we're asked not to
-    unless ( $args{'no_auto_status'} ) {
-        $args{'status'} = 'closed'
-            if $args{'resolution'} and not $args{'status'};
-        
-        $args{'status'} = 'assigned'
-            if $args{'owner'} and not $args{'status'};
-        
-        $args{'status'} = 'accepted'
-            if $args{'owner'} and $args{'owner'} eq $self->connection->user
-               and not $args{'status'};
-    }
 
     my ($form,$form_num)= $self->_get_update_ticket_form();
 
     # Copy over the values we'll be using
     my %form = map  { "field_".$_ => $args{$_} }
-               grep { !/comment|no_auto_status/ } keys %args;
+               grep { !/comment|no_auto_status|status|resolution|owner/ } keys %args;
 
     # Copy over comment too -- it's a pseudo-prop
     $form{'comment'} = $args{'comment'};
+    $self->connection->mech->form_number( $form_num );
+
+    if ( $args{'resolution'} || $args{'status'} && $args{'status'} eq 'closed' ) {
+        $form{'action'}                            = 'resolve';
+        $form{'action_resolve_resolve_resolution'} = $args{'resolution'}
+          if $args{'resolution'};
+    }
+    elsif ( $args{'owner'} || $args{'status'} && $args{'status'} eq 'assigned' ) {
+        $form{'action'}                         = 'reassign';
+        $form{'action_reassign_reassign_owner'} = $args{'owner'}
+          if $args{'owner'};
+    }
+    elsif ( $args{'status'} && $args{'status'} eq 'reopened' ) {
+        $form{'action'} = 'reopen';
+    }
 
     $self->connection->mech->submit_form(
         form_number => $form_num,
@@ -526,6 +547,10 @@ getting them.
 =head2 valid_props
 
 Returns a list of the valid properties of a ticket.
+
+=head2 add_custom_props
+
+Adds custom properties to valid properties list.
 
 =head2 valid_create_props
 
